@@ -57,13 +57,17 @@ only when iOS asks for it, and SHALL open the system's keyboard switcher.
 - **THEN** the field shows `টা`, and Shift is off again
 
 ### Requirement: Options
-A key on the keyboard SHALL open an options panel with the same three toggles as the macOS input menu:
-Bengali digits, দাঁড়ি for full stop, and smart quotes, all on by default. A change SHALL apply from the
+A key on the keyboard SHALL open an options panel with the same four toggles as the macOS input menu:
+Bengali digits, দাঁড়ি for full stop, smart quotes and Autocorrect, all on by default. A change SHALL apply from the
 next key and SHALL be remembered when the keyboard is opened again.
 
 #### Scenario: ASCII digits
 - **WHEN** the user turns off Bengali digits and types `2024`
 - **THEN** the field shows `2024`
+
+#### Scenario: Autocorrect out of the box
+- **WHEN** the user types `amra` then space on a fresh install, without opening the options
+- **THEN** the field shows `আমরা `, and Backspace right after gives `আম্রা`
 
 ### Requirement: Container app and privacy
 The keyboard SHALL ship inside an iOS app named Druti for iOS 17 or later that explains how to turn the

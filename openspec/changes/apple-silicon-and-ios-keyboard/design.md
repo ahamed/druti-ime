@@ -90,7 +90,9 @@ use target-action, which is main-actor safe in Swift 6.
 The keyboard can't read the container app's preferences without an App Group, which a free
 account can't use, so the toggles are in a panel the gear key opens, stored in the extension's own
 `UserDefaults`. `Settings` moves into `BengaliIMECore` so the Mac input menu and the iOS panel use
-the same keys and defaults; each process has its own domain.
+the same keys and defaults; each process has its own domain. Every toggle defaults to on, Autocorrect
+included (the author's decision, amending autocorrect design D6); the engine's own default stays
+off, so the fixtures and the playground don't change.
 
 ### D6. Build and install from source with any Apple account
 `make -C ios project` builds the engine and generates `ios/Druti.xcodeproj`. The developer picks

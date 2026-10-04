@@ -186,6 +186,16 @@ struct KeyboardSessionTests {
     }
 }
 
+@Suite("Settings")
+struct SettingsTests {
+    // Every toggle, Autocorrect included, is on until the user changes it, on
+    // macOS and iOS alike (autocorrect design D6, as amended).
+    @Test(arguments: Settings.Option.allCases)
+    func toggleIsOnByDefault(option: Settings.Option) {
+        #expect(option.defaultValue)
+    }
+}
+
 @Suite("Keyboard layout")
 struct KeyboardLayoutTests {
     private func characters(_ row: [KeyboardKey]) -> String {

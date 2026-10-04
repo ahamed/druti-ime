@@ -14,7 +14,8 @@ No task here changes engine or composer behaviour, and no fixture changes.
 - [x] 2.1 `Package.swift`: add the iOS 17 platform. Move `Settings` into the package as public API (design D5) and move `.swift-format` to the repository root (design D7)
 - [x] 2.2 Add `TextDocument` and `KeyboardSession` (design D2, D3) with tests through a fake document: each key as marked text, Space and Return commit, letter Backspace, Backspace on committed text, kar after a document consonant, apps without text, caret moves, the app ending the word, config changes
 - [x] 2.3 Add `KeyboardState` with tests: QWERTY rows, globe only when asked, one-shot Shift, Caps Lock, `^` and `:` reachable, Space returns to letters, rows fit ten keys
-- [ ] 2.4 (Mac) `make -C macos test` and `make -C macos lint` pass, and `make -C macos install` still types `khub` → `খুব` in TextEdit with the menu toggles working (Settings moved)
+- [ ] 2.4 (Mac) `make -C macos test` and `make -C macos lint` pass, and `make -C macos install` still types `khub` → `খুব` in TextEdit with the menu toggles working (Settings moved), and `amra` + space gives `আমরা ` with Autocorrect never touched
+- [x] 2.5 Merge `main` (Autocorrect): add the Autocorrect toggle to the shared `Settings` and the iOS options panel, on by default on both platforms. Verify with the `Settings` default test and a `KeyboardSession` test for correction and Backspace undo
 
 ## 3. M2 — iOS app and keyboard (Linux, verified on Mac)
 

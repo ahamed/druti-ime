@@ -68,8 +68,9 @@ and `o` always keeps them apart (`korote` → `করতে`):
   `পর‍্যন্ত`); reph over য is typed `rry` (`porryonto` → `পর্যন্ত`). **`z`** is the letter য
   (`porzonto` → `পরযন্ত`).
 
-Three options can be turned off in the Mac input menu and in the playground: Bengali digits,
-দাঁড়ি for `.`, and smart quotes. A fourth, Autocorrect, is off until you turn it on.
+Four options can be turned on and off in the Mac input menu, the iOS keyboard and the playground:
+Bengali digits, দাঁড়ি for `.`, smart quotes and Autocorrect. In the Mac and iOS apps all four are on
+by default; in the playground, Autocorrect is off until you turn it on.
 
 ### Autocorrect
 

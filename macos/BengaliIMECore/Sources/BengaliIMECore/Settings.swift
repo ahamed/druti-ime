@@ -1,8 +1,10 @@
 import Foundation
 
 /// The toggles (Bengali digits, দাঁড়ি, smart quotes, Autocorrect), stored in
-/// the process's own UserDefaults so they survive restarts and upgrades. The
-/// output options are on by default, Autocorrect is off.
+/// the process's own UserDefaults so they survive restarts and upgrades. All
+/// on by default, Autocorrect included: the engine's `defaultConfig()` keeps
+/// Autocorrect off for the fixtures and the playground, but the Mac and iOS
+/// apps turn it on (autocorrect design D6, as amended).
 ///
 /// The macOS input menu and the iOS keyboard's options panel both use this
 /// (apple-silicon-and-ios-keyboard design D5). Each stores its toggles in its
@@ -23,9 +25,9 @@ public enum Settings {
         /// A finished word is corrected from the Autocorrect list.
         case autocorrect
 
-        /// The value until the toggle is first used. Autocorrect is off, also
-        /// after an upgrade from a version without it (autocorrect design D6).
-        public var defaultValue: Bool { self != .autocorrect }
+        /// The value until the toggle is first used, also after an upgrade
+        /// from a version without it.
+        public var defaultValue: Bool { true }
     }
 
     private static var defaults: UserDefaults { .standard }

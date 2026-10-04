@@ -7,9 +7,8 @@ options:
   createIntermediateGroups: true
 settings:
   base:
-    # Universal: Apple Silicon and Intel.
-    ARCHS: "arm64 x86_64"
-    ONLY_ACTIVE_ARCH: NO
+    # Apple Silicon only (apple-silicon-and-ios-keyboard design D1).
+    ARCHS: arm64
     SWIFT_VERSION: "6.0"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     # The app's version, and its only source: `make version` prints it and the

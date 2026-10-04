@@ -1,8 +1,9 @@
 # CLAUDE.md
 
 Druti is a phonetic roman-to-Bengali typing engine. Rust is the only implementation of the
-algorithm (`crates/druti-core`). Swift (the macOS input method in `macos/`) and TypeScript (the
-playground in `examples/playground/`) are thin hosts over it. See `README.md` for the layout and
+algorithm (`crates/druti-core`). Swift (the macOS input method in `macos/`, the iOS keyboard in
+`ios/`) and TypeScript (the playground in `examples/playground/`) are thin hosts over it. The Apple
+hosts run on Apple silicon only (arm64): no Intel Macs, no Rosetta, no x86_64 simulator. See `README.md` for the layout and
 `openspec/` for specs and design history.
 
 ## Commands
@@ -13,8 +14,9 @@ playground in `examples/playground/`) are thin hosts over it. See `README.md` fo
 | Rust: WASM lint | `cargo clippy -p druti-wasm --target wasm32-unknown-unknown -- -D warnings` |
 | Rust: MSRV | `cargo +1.91 check --workspace --all-targets --all-features` |
 | Swift: format, lint | `make -C macos format`, `make -C macos lint` |
-| Swift: test (builds the Rust core first) | `make -C macos test` |
-| Swift: build the app | `make -C macos app` |
+| Swift: test (builds the Rust core first) | `make -C macos test` (macOS), `make -C ios test` (iOS Simulator) |
+| Swift: build the apps | `make -C macos app`, `make -C ios app` |
+| Swift: format, lint (iOS) | `make -C ios format`, `make -C ios lint` |
 
 CI (`.github/workflows/ci.yml`) runs all of these. Run the relevant ones before calling a change
 done; a change is not finished while any of them fails or warns.
@@ -111,19 +113,22 @@ Swift 6 strict concurrency, and Apple's `swift-format` (bundled with Xcode 16 an
 - **Swift 6 language mode** everywhere: `swift-tools-version:6.0` in `Package.swift` and
   `SWIFT_VERSION: "6.0"` in `project.yml`. The build has zero warnings; treat a new one as an
   error.
-- Deployment target macOS 14; universal (arm64 + x86_64). Check availability before using newer
-  APIs (for example `Synchronization.Mutex` needs macOS 15).
-- `project.yml` (XcodeGen) is the project's source of truth; the `.xcodeproj` is generated and
+- Deployment targets macOS 14 and iOS 17; arm64 only. Check availability before using newer
+  APIs (for example `Synchronization.Mutex` needs macOS 15 and iOS 18).
+- `macos/project.yml` and `ios/project.yml` (XcodeGen) are each project's source of truth; the `.xcodeproj` is generated and
   not committed. Build through the Makefile.
-- `BengaliIMECore` holds the generated UniFFI bindings plus AppKit-free logic, so it is unit
-  tested with `swift test`. Put anything testable there, not in the `Druti` app target.
+- `BengaliIMECore` (in `macos/`, shared by both apps) holds the generated UniFFI bindings plus
+  logic free of AppKit and UIKit, so it is unit tested with `swift test` and on the iOS Simulator.
+  Put anything testable there (the iOS `KeyboardSession` and `KeyboardState` are), not in an app
+  target.
 - Never edit `Sources/BengaliIMECore/Generated/`; change the Rust side and run `make -C macos core`.
 
 ### Formatting and style
 
-- `swift-format` with the repo's `.swift-format`: 4-space indent, 100 columns, ordered imports,
+- `swift-format` with the repo's root `.swift-format`: 4-space indent, 100 columns, ordered imports,
   no force unwraps (`!`) or `try!`, early exits with `guard`, documented public declarations.
-  `make -C macos format` rewrites; `make -C macos lint` (run in CI with `--strict`) checks.
+  `make -C macos format` / `make -C ios format` rewrite; the matching `lint` targets (run in CI
+  with `--strict`) check.
 - Suppress a rule only with `// swift-format-ignore: RuleName` on the line above, plus a comment
   saying why.
 - Implicitly unwrapped parameters (`Any!`, `NSEvent!`) appear only where an `override` of an
@@ -169,4 +174,5 @@ Swift 6 strict concurrency, and Apple's `swift-format` (bundled with Xcode 16 an
 - Parameterize over inputs with `@Test(arguments:)` instead of loops inside one test.
 - Test names describe behaviour (`copiesElsewhereBecomeTheInstaller`). Tests must be independent:
   each creates its own `Composer`.
-- CI also runs the Swift tests as x86_64 under Rosetta; don't depend on the host architecture.
+- CI runs the `BengaliIMECore` tests on macOS and on the iOS Simulator; don't depend on the
+  platform. Code that touches the iOS text field goes behind `TextDocument`, so a fake can test it.

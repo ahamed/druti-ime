@@ -1,5 +1,5 @@
 //! Host adapter for marked-text input methods (macOS, the web playground, and
-//! later iOS).
+//! the iOS keyboard).
 //!
 //! The engine rewrites recent output (`k` then `h`: ক → খ, Backspace:
 //! `দ্ম` → `দ`). A host can reliably change only its own marked (pending)

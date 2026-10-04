@@ -25,7 +25,7 @@ Implement after `rr-reph` has landed.
 
 - [x] 3.1 Add `autocorrect` to the `Config` of `druti-ffi` and `druti-wasm` with matching docs. Verify that the parity tests pass and that the WASM clippy target is clean (Linux).
 - [x] 3.2 Add the playground toggle for typing and conversion (Linux). Verify the "Toggle in the playground" scenario in the browser.
-- [ ] 3.3 Add the macOS input-menu toggle, stored with the others and off after upgrade; apply it to Convert selection (Mac). Verify with `make -C macos test` and by hand for "Turning on Autocorrect" and "Upgrade keeps it off". (Swift written on Linux: `Settings`, the menu item and a binding test; not yet compiled.)
+- [ ] 3.3 Add the macOS input-menu toggle, stored with the others and on by default, also after upgrade (design D6 as amended); apply it to Convert selection (Mac). Verify with `make -C macos test` and by hand for "Turning on Autocorrect", "On after an upgrade" and "Turning it off is remembered". (Swift written on Linux: `Settings`, the menu item and a binding test; not yet compiled.)
 - [ ] 3.4 Manually check word-end correction and Backspace undo in TextEdit, Notes, Safari and one Chromium-based app, watching the pending trailing space (Mac). Record the results in the PR.
 
 ## 4. Documentation and release (Linux)

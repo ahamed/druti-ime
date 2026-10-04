@@ -1,5 +1,5 @@
-//! UniFFI surface of `druti-core` for Swift (the macOS input method, and
-//! later an iOS keyboard extension). Nothing platform-specific lives here.
+//! UniFFI surface of `druti-core` for Swift (the macOS input method and the
+//! iOS keyboard extension). Nothing platform-specific lives here.
 //!
 //! Every call is guarded: if the engine ever panics, the composer is reset
 //! and the key is reported as not handled, so the host app still receives it

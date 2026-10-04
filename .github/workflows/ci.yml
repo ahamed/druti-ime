@@ -57,40 +57,46 @@ jobs:
       - run: cargo check --workspace --all-targets --all-features
 
   macos:
+    # Apple Silicon only: the macOS input source and the iOS keyboard, both arm64
+    # (apple-silicon-and-ios-keyboard design D1).
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin, x86_64-apple-darwin
+          targets: aarch64-apple-darwin, aarch64-apple-ios, aarch64-apple-ios-sim
       - uses: Swatinem/rust-cache@v2
       - run: brew install xcodegen
       - name: Swift format and style
         # The newest Xcode on the image; its swift-format is closest to current local Xcodes.
-        run: make -C macos lint
+        run: |
+          make -C macos lint
+          make -C ios lint
         env:
           DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-      - name: Install Rosetta if missing (for the x86_64 tests)
-        run: arch -x86_64 /usr/bin/true 2>/dev/null || softwareupdate --install-rosetta --agree-to-license
-      - name: Swift tests (bindings and helpers)
+      - name: Swift tests on macOS (bindings and helpers)
         run: make -C macos test
-      - name: Rust engine tests on x86_64 (Rosetta)
-        run: cargo test --target x86_64-apple-darwin -p druti-core
-      - name: Swift tests on x86_64 (Rosetta)
-        # The whole toolchain runs as x86_64, so the test bundle loads.
-        run: arch -x86_64 swift test --package-path macos/BengaliIMECore
+      - name: Swift tests on the iOS Simulator
+        run: make -C ios test
       - name: Build and sign the input method
         run: make -C macos app
-      - name: Check the bundle
+      - name: Build the iOS app and keyboard
+        run: make -C ios app
+      - name: Check the bundles
         run: |
-          APP=macos/build/DerivedData/Build/Products/Release/Druti.app
-          for BIN in macos/BengaliIMECore/BengaliIMEFFI.xcframework/macos-arm64_x86_64/libbengali_ime_ffi.a "$APP/Contents/MacOS/Druti"; do
+          FRAMEWORK=macos/BengaliIMECore/BengaliIMEFFI.xcframework
+          MAC_APP=macos/build/DerivedData/Build/Products/Release/Druti.app
+          IOS_APP=ios/build/DerivedData/Build/Products/Release-iphoneos/Druti.app
+          KEYBOARD="$IOS_APP/PlugIns/DrutiKeyboard.appex"
+          for BIN in "$FRAMEWORK"/{macos-arm64,ios-arm64,ios-arm64-simulator}/libbengali_ime_ffi.a \
+              "$MAC_APP/Contents/MacOS/Druti" "$IOS_APP/Druti" "$KEYBOARD/DrutiKeyboard"; do
             ARCHS="$(lipo -archs "$BIN")"
             echo "$BIN: $ARCHS"
-            for A in arm64 x86_64; do
-              [[ " $ARCHS " == *" $A "* ]] || { echo "::error::$BIN is missing $A"; exit 1; }
-            done
+            [ "$ARCHS" = arm64 ] || { echo "::error::$BIN should be arm64 only, has $ARCHS"; exit 1; }
           done
-          plutil -extract InputMethodServerControllerClass raw "$APP/Contents/Info.plist"
-          plutil -extract CFBundleIdentifier raw "$APP/Contents/Info.plist"
-          test -f "$APP/Contents/Resources/MenuIcon.tiff"
+          plutil -extract InputMethodServerControllerClass raw "$MAC_APP/Contents/Info.plist"
+          plutil -extract CFBundleIdentifier raw "$MAC_APP/Contents/Info.plist"
+          test -f "$MAC_APP/Contents/Resources/MenuIcon.tiff"
+          plutil -extract NSExtension.NSExtensionPointIdentifier raw "$KEYBOARD/Info.plist"
+          plutil -extract NSExtension.NSExtensionPrincipalClass raw "$KEYBOARD/Info.plist"
+          [ "$(plutil -extract NSExtension.NSExtensionAttributes.RequestsOpenAccess raw "$KEYBOARD/Info.plist")" = false ]

@@ -9,8 +9,8 @@ engine as the Mac app, compiled to WebAssembly.
 
 ## Download for macOS
 
-**Druti** is a Mac input source that types Bengali in any app. It needs macOS 14 or later, on Apple
-Silicon or Intel.
+**Druti** is a Mac input source that types Bengali in any app. It needs macOS 14 or later on a Mac
+with Apple Silicon (M1 or later); it doesn't run on Intel Macs.
 
 1. Download the latest **Druti-X.Y.Z.dmg** from [Releases](https://github.com/ahamed/druti-ime/releases/latest)
    and open it. (Or download **Druti-X.Y.Z.app.zip**, unzip it and use the Druti app inside it.)
@@ -25,6 +25,13 @@ Silicon or Intel.
 **Uninstall:** choose **Uninstall Druti…** from Druti's input menu.
 
 More in [macos/README.md](macos/README.md).
+
+## iPhone and iPad
+
+Druti is also an iOS keyboard, with the same engine and the same typing rules. It needs iOS 17 or
+later. There's no App Store release yet: you build it on an Apple Silicon Mac with Xcode and
+install it on your iPhone or iPad with your own Apple account (a free one works). See
+[ios/README.md](ios/README.md).
 
 ## How typing works
 
@@ -61,8 +68,9 @@ and `o` always keeps them apart (`korote` → `করতে`):
   `পর‍্যন্ত`); reph over য is typed `rry` (`porryonto` → `পর্যন্ত`). **`z`** is the letter য
   (`porzonto` → `পরযন্ত`).
 
-Three options can be turned off in the Mac input menu and in the playground: Bengali digits,
-দাঁড়ি for `.`, and smart quotes. A fourth, Autocorrect, is off until you turn it on.
+Four options can be turned on and off in the Mac input menu, the iOS keyboard and the playground:
+Bengali digits, দাঁড়ি for `.`, smart quotes and Autocorrect. In the Mac and iOS apps all four are on
+by default; in the playground, Autocorrect is off until you turn it on.
 
 ### Autocorrect
 
@@ -87,10 +95,11 @@ Convert selection and the playground's converter apply it too when it's on.
 | Path                                          | What it is                                                                                                                                           |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`crates/druti-core`](crates/druti-core/)     | The engine, in Rust: keystroke rules, the pending/commit composer, bulk conversion. Its behaviour is pinned by golden fixtures in `tests/fixtures/`. |
-| [`crates/druti-ffi`](crates/druti-ffi/)       | UniFFI bindings for Swift, used by the Mac app.                                                                                                      |
+| [`crates/druti-ffi`](crates/druti-ffi/)       | UniFFI bindings for Swift, used by the Mac app and the iOS keyboard.                                                                                 |
 | [`crates/druti-wasm`](crates/druti-wasm/)     | wasm-bindgen bindings for JavaScript, used by the playground.                                                                                        |
 | [`examples/playground`](examples/playground/) | The web playground (Vite + TypeScript), deployed to GitHub Pages from `main`.                                                                        |
-| [`macos`](macos/)                             | The Druti input source (Swift, AppKit, InputMethodKit).                                                                                              |
+| [`macos`](macos/)                             | The Druti input source (Swift, AppKit, InputMethodKit), and `BengaliIMECore`, the Swift package shared with iOS.                                     |
+| [`ios`](ios/)                                 | The Druti keyboard for iPhone and iPad (Swift, UIKit keyboard extension).                                                                            |
 | [`openspec`](openspec/)                       | Specs and the design history of each change.                                                                                                         |
 
 ## Development
@@ -111,7 +120,7 @@ yarn dev      # builds the WASM package, then starts Vite
 yarn build    # production build into dist/
 ```
 
-The Mac app: see [macos/README.md](macos/README.md).
+The Mac app: see [macos/README.md](macos/README.md). The iOS keyboard: see [ios/README.md](ios/README.md).
 
 To change how something types, change `druti-core` and update the affected entries in
 `crates/druti-core/tests/fixtures/` in the same commit (see its

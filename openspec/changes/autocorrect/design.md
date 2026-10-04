@@ -111,7 +111,11 @@ touched, because the correction is still pending when it is undone.
   options default to current behaviour), unlike `rr-reph`.
 - `druti-ffi` and `druti-wasm` add the field to their `Config` together, with the same doc, and their
   parity tests cover it.
-- macOS: an input-menu toggle stored with the others; off after upgrade. Playground: a toggle.
+- macOS: an input-menu toggle stored with the others. Playground: a toggle.
+- **Amended (author, 2026-10-04):** the Mac and iOS apps turn Autocorrect **on by default**, for new
+  installs and for upgrades where the toggle was never used. Their `Settings` passes it explicitly;
+  `Config::autocorrect` still defaults to `false`, so the engine, its fixtures and the playground
+  keep the rule above.
 - `transpile` takes the same config: Convert selection and the playground converter correct words when
   it is on.
 

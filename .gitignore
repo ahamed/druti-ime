@@ -16,5 +16,9 @@ examples/playground/wasm
 /macos/BengaliIMECore/BengaliIMEFFI.xcframework
 /macos/BengaliIMECore/Sources/BengaliIMECore/Generated
 
+# iOS app build products (make -C ios ...)
+/ios/build
+/ios/Druti.xcodeproj
+
 # Python bytecode (scripts/autocorrect)
 __pycache__/

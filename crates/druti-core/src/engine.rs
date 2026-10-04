@@ -9,10 +9,11 @@ use unicode_general_category::{GeneralCategory, get_general_category};
 
 use crate::data::{
     self, ASPIRATED_CONSONANT_BY_BASE, CAPITAL_ROMAN_TO_CONSONANT, CHONDROBINDU, DARI,
-    DEFAULT_CONSONANT_BY_ROMAN_KEY, DOUBLE_DASH, ENTER_KEY, FULL_STOP, HASANT, NUMBER_MAP,
-    ROMAN_TO_PHONETIC_VOWELS, SPACE, SPECIAL_CHARACTER_INPUTS, SPECIAL_CHARACTERS_MAP,
-    TYPOGRAPHIC_DOUBLE_QUOTE_CLOSE, TYPOGRAPHIC_DOUBLE_QUOTE_OPEN, TYPOGRAPHIC_SINGLE_QUOTE_CLOSE,
-    TYPOGRAPHIC_SINGLE_QUOTE_OPEN, is_ascii_or_bengali_digit, is_kar_taking_consonant, lookup,
+    DEFAULT_CONSONANT_BY_ROMAN_KEY, DOUBLE_DASH, ENTER_KEY, FULL_STOP, HASANT, NO_JOIN_AFTER,
+    NUMBER_MAP, ONTOSTHO_RO, PHOLA_AFTER_NO_JOIN, ROMAN_TO_PHONETIC_VOWELS, SPACE,
+    SPECIAL_CHARACTER_INPUTS, SPECIAL_CHARACTERS_MAP, TYPOGRAPHIC_DOUBLE_QUOTE_CLOSE,
+    TYPOGRAPHIC_DOUBLE_QUOTE_OPEN, TYPOGRAPHIC_SINGLE_QUOTE_CLOSE, TYPOGRAPHIC_SINGLE_QUOTE_OPEN,
+    is_ascii_or_bengali_digit, is_kar_taking_consonant, lookup,
 };
 use crate::vowel_attach::{
     ends_with_consonant_and_chandrabindu_units, ends_with_kar_taking_consonant_units,
@@ -112,8 +113,12 @@ fn single_quote_from_prior(prior: &str) -> &'static str {
 }
 
 /// Output options (the macOS input menu and the playground toggles).
-/// `Config::default()` turns all of them on.
+/// `Config::default()` turns the output toggles on and Autocorrect off.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "independent on/off settings, one per menu item"
+)]
 pub struct Config {
     /// `1` → `১`. Off: digits stay ASCII.
     pub bengali_digits: bool,
@@ -121,6 +126,11 @@ pub struct Config {
     pub dari_for_period: bool,
     /// `"` and `'` become typographic quotes. Off: they stay ASCII.
     pub smart_quotes: bool,
+    /// Corrects a finished word from the Autocorrect list, which only removes
+    /// hasants (`আম্রা` → `আমরা`). The [`Engine`] ignores it: the
+    /// [`Composer`](crate::Composer) applies it when a word ends, and bulk
+    /// conversion to every word. Off by default (autocorrect design D6).
+    pub autocorrect: bool,
 }
 
 impl Default for Config {
@@ -129,6 +139,7 @@ impl Default for Config {
             bengali_digits: true,
             dari_for_period: true,
             smart_quotes: true,
+            autocorrect: false,
         }
     }
 }
@@ -351,6 +362,16 @@ impl Engine {
             return;
         }
 
+        // Reph never comes before a vowel, so a vowel after `rr` drops the
+        // armed hasant and acts as after র (rr-reph design D3). The host's text
+        // still ends in that hasant, so read it without it.
+        let text_before_caret = if self.reph_is_armed() {
+            self.drop_armed_hasant();
+            text_before_caret.map(|text| text.strip_suffix(HASANT).unwrap_or(text))
+        } else {
+            text_before_caret
+        };
+
         // A kar only ever attaches to a consonant directly before the caret; after
         // anything else the vowel is independent. `o` after a consonant is the
         // silent inherent vowel, so the next vowel starts a new syllable.
@@ -388,7 +409,8 @@ impl Engine {
     fn process_consonant(&mut self, key: &str) {
         let last_in_buffer = self.last_in_buffer();
 
-        if rules::kkhiyo(self, key)
+        if rules::reph(self, key)
+            || rules::kkhiyo(self, key)
             || rules::ho(self, key)
             || rules::khanda_to(self, key)
             || rules::ja_fala(self, key)
@@ -420,14 +442,33 @@ impl Engine {
             return;
         };
 
-        let has_hasant = last_in_buffer
-            .as_deref()
-            .is_some_and(is_kar_taking_consonant);
-        if has_hasant {
-            self.append(&format!("{HASANT}{consonant}"), true);
-        } else {
-            self.append(consonant, true);
+        match last_in_buffer.as_deref() {
+            Some(last) if is_kar_taking_consonant(last) => {
+                if joins_after(last, key, consonant) {
+                    self.append(&format!("{HASANT}{consonant}"), true);
+                } else {
+                    // Written side by side: the consonant starts a new cluster,
+                    // so no later rule reads across the gap (rr-reph design D1).
+                    self.flush_buffer();
+                    self.append(consonant, true);
+                }
+            }
+            _ => self.append(consonant, true),
         }
+    }
+
+    /// Whether the buffer ends in a reph armed by `rr`: `র্`, the only hasant
+    /// the engine leaves at the end of its buffer (rr-reph design D2).
+    pub(crate) fn reph_is_armed(&self) -> bool {
+        self.buffer_ends_with(&format!("{ONTOSTHO_RO}{HASANT}"))
+    }
+
+    /// Deletes the hasant of an armed reph, keeping `র` as the end of the buffer.
+    fn drop_armed_hasant(&mut self) {
+        let len = utf16(HASANT).len();
+        self.splice_tail(len, &[]);
+        self.buffer.truncate(self.buffer.len() - len);
+        self.actions.push(Action::Delete { chars_back: len });
     }
 
     /// Any other single code point is written as-is and ends the cluster.
@@ -605,6 +646,21 @@ impl Engine {
         self.append(text, false);
         self.flush_buffer();
     }
+}
+
+/// Whether `consonant`, typed with `key`, joins the kar-taking consonant
+/// `last` that ends the buffer. A single র never joins what follows (reph is
+/// typed `rr`, rr-reph design D1); after a breathy letter, হ, ড়, ঢ় or য় only a
+/// ফলা joins, and ব only when typed with `w` (design D4b). Everything else
+/// joins, and `o` keeps letters apart.
+fn joins_after(last: &str, key: &str, consonant: &str) -> bool {
+    if last == ONTOSTHO_RO {
+        return false;
+    }
+    if NO_JOIN_AFTER.contains(&last) {
+        return PHOLA_AFTER_NO_JOIN.contains(&consonant) || key.eq_ignore_ascii_case("w");
+    }
+    true
 }
 
 /// `isVowel`: true for roman vowel keys (and their lowercase forms).

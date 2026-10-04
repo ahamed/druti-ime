@@ -5,35 +5,42 @@ use crate::data::{
     ASPIRATED_CONSONANT_BY_BASE, BORGIYO_JO, CHONDROBINDU, DONTO_NO, DONTO_TO, HASANT, KHONDO_TO,
     KONTHYO_GO, KONTHYO_KO, KONTHYO_UNGO, MURDHONNO_NO, MURDHONNO_SHO, O_KAR, OI_KAR, ONTOSTHO_JO,
     ONTOSTHO_RO, ONUSHWAR, OU_KAR, RASSAW_RI, RASSAW_RI_KAR, TALOBBO_CHO, TALOBBO_NYO, USHMO_HO,
-    VOWEL_O, VOWEL_OI, VOWEL_OU, is_kar_taking_consonant, lookup,
+    VOWEL_O, VOWEL_OI, VOWEL_OU, ZWJ, is_kar_taking_consonant, lookup,
 };
 use crate::engine::{Engine, is_vowel, utf16};
 
-/// `rassaw-ri`: র্র + i → ঋ, or ঋ-kar when a consonant is stacked before it.
+/// `rassaw-ri`: an armed `র্` (typed `rr`) + i → ঋ, or ঋ-kar when the র is
+/// a র-ফলা (rr-reph design D3).
 pub(crate) fn rassaw_ri(ime: &mut Engine, key: &str) -> bool {
-    if key != "i" {
+    if key != "i" || !ime.reph_is_armed() {
         return false;
     }
-    let rr_tail = utf16(&format!("{ONTOSTHO_RO}{HASANT}{ONTOSTHO_RO}"));
-    if !ime.buffer.ends_with(&rr_tail) {
+    let armed = utf16(&format!("{ONTOSTHO_RO}{HASANT}"));
+    let before = &ime.buffer[..ime.buffer.len() - armed.len()];
+    // `rrrr` arms a র stacked on another armed র; leave that to the vowel.
+    if before.ends_with(&armed) {
         return false;
     }
-    let triple_r_tail = utf16(&format!(
-        "{ONTOSTHO_RO}{HASANT}{ONTOSTHO_RO}{HASANT}{ONTOSTHO_RO}"
-    ));
-    if ime.buffer.ends_with(&triple_r_tail) {
-        return false;
-    }
-    // A consonant stacked before র্র takes ঋ-kar (ক্র্র → কৃ); anything else
+    // A consonant stacked before the র takes ঋ-kar (ক্র্ → কৃ); anything else
     // (nothing, or a vowel such as ও) gets the independent ঋ.
-    let before = &ime.buffer[..ime.buffer.len() - rr_tail.len()];
     if before.ends_with(&utf16(HASANT)) {
-        ime.pop(rr_tail.len() + 1);
+        ime.pop(armed.len() + 1);
         ime.append_and_flush_buffer(RASSAW_RI_KAR);
         return true;
     }
-    ime.pop(rr_tail.len());
+    ime.pop(armed.len());
     ime.append_and_flush_buffer(RASSAW_RI);
+    true
+}
+
+/// `reph`: `r` after a র arms a reph by writing its hasant at once
+/// (`korr` → কর্), so the next consonant completes it without changing any
+/// letter (rr-reph design D2). The hasant stays in the buffer.
+pub(crate) fn reph(ime: &mut Engine, key: &str) -> bool {
+    if key != "r" || ime.last_in_buffer().as_deref() != Some(ONTOSTHO_RO) {
+        return false;
+    }
+    ime.append(HASANT, true);
     true
 }
 
@@ -112,20 +119,31 @@ pub(crate) fn khanda_to(ime: &mut Engine, key: &str) -> bool {
     true
 }
 
-/// `ja-fala`: kar-taking consonant + y → ্য.
+/// `ja-fala`: kar-taking consonant + y → ্য. `y` never makes reph (rr-reph
+/// design D4): after a lone র it writes ZWJ first so the ফলা stays visible
+/// (`poryonto` → পর + ZWJ + ্যন্ত); after a র-ফলা the stacked র already shows; after an
+/// armed `র্` it completes the reph over য (`karryo` → কার্য).
 pub(crate) fn ja_fala(ime: &mut Engine, key: &str) -> bool {
     if key != "y" {
         return false;
     }
-    if ime
-        .last_in_buffer()
-        .as_deref()
-        .is_some_and(is_kar_taking_consonant)
-    {
-        ime.append(&format!("{HASANT}{ONTOSTHO_JO}"), true);
+    if ime.reph_is_armed() {
+        ime.append(ONTOSTHO_JO, true);
         return true;
     }
-    false
+    let Some(last) = ime.last_in_buffer() else {
+        return false;
+    };
+    if !is_kar_taking_consonant(&last) {
+        return false;
+    }
+    let ro_phola = utf16(&format!("{HASANT}{ONTOSTHO_RO}"));
+    if last == ONTOSTHO_RO && !ime.buffer.ends_with(&ro_phola) {
+        ime.append(&format!("{ZWJ}{HASANT}{ONTOSTHO_JO}"), true);
+    } else {
+        ime.append(&format!("{HASANT}{ONTOSTHO_JO}"), true);
+    }
+    true
 }
 
 /// `aspiration`: consonant + h → aspirated form.

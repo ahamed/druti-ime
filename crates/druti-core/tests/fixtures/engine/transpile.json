@@ -20,7 +20,7 @@
     {"input":"shap","output":"শাপ"},
     {"input":"ShoRoz","output":"ষড়য"},
     {"input":"Kola","output":"খলা"},
-    {"input":"Ghor","output":"ঘ্হর"},
+    {"input":"Ghor","output":"ঘহর"},
     {"input":"Pakhi","output":"ফাখি"},
     {"input":"bakSo","output":"বাক্শ"},
     {"input":"kkhoma","output":"ক্ষমা"},
@@ -32,7 +32,7 @@
     {"input":"swapno","output":"স্বাপ্ন"},
     {"input":"bondhu","output":"বন্ধু"},
     {"input":"shontan","output":"শন্তান"},
-    {"input":"ashcorjo","output":"আশ্চর্জ"},
+    {"input":"ashcorjo","output":"আশ্চরজ"},
     {"input":"stri","output":"স্ত্রি"},
     {"input":"spoSTo","output":"স্পশ্ট"},
     {"input":"kSoy","output":"ক্শয়"},
@@ -40,7 +40,7 @@
     {"input":"rrin","output":"ঋন"},
     {"input":"krriShi","output":"কৃষি"},
     {"input":"brriShTi","output":"বৃষ্টি"},
-    {"input":"rrrit","output":"র্র্রিত"},
+    {"input":"rrrit","output":"র্রিত"},
     {"input":"grriho","output":"গৃহ"},
     {"input":"trrina","output":"তৃনা"},
     {"input":"Oikko","output":"ঐক্ক"},
@@ -70,7 +70,7 @@
     {"input":"byakoron","output":"ব্যাকরন"},
     {"input":"jyoti","output":"জ্যতি"},
     {"input":"kyamera","output":"ক্যামেরা"},
-    {"input":"Ghy","output":"ঘ্হ্য"},
+    {"input":"Ghy","output":"ঘহ্য"},
     {"input":"hotHat","output":"হৎআত"},
     {"input":"sotHkar","output":"সৎকার"},
     {"input":"utHsob","output":"উৎসব"},
@@ -138,6 +138,9 @@
     {"input":"tumi kemon acho?","output":"তুমি কেমন আছ?"},
     {"input":"ekTi chOTo nodi","output":"এক্টি ছোট নদি"},
     {"input":"bangladesher rajdhani Dhaka.","output":"বাংলাদেশের রাজ্ধানি ঢাকা।"},
-    {"input":"Ekushe februyari 1952","output":"একুশে ফেব্রুয়ারি ১৯৫২"}
+    {"input":"Ekushe februyari 1952","output":"একুশে ফেব্রুয়ারি ১৯৫২"},
+    {"input":"ami kaj korte cai, korrtar kotha Suni","output":"আমি কাজ করতে চাই, কর্তার কথা শুনি"},
+    {"input":"korrta korte","output":"কর্তা করতে"},
+    {"input":"amra dekhte cai, poryonto porryonto","output":"আম্রা দেখতে চাই, পর‍্যন্ত পর্যন্ত"}
   ]
 }

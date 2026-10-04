@@ -50,10 +50,10 @@ struct Host {
 }
 
 impl Host {
-    fn new(kind: Kind) -> Self {
+    fn with_config(kind: Kind, config: Config) -> Self {
         Self {
             kind,
-            composer: Composer::new(Config::default()),
+            composer: Composer::new(config),
             text: Vec::new(),
             caret: 0,
             marked: Vec::new(),
@@ -166,8 +166,12 @@ impl Host {
 
 /// Runs `script` on each of `hosts` and checks the visible text.
 fn check(hosts: &[Kind], script: &[Op<'_>], expected: &str) {
+    check_with(Config::default(), hosts, script, expected);
+}
+
+fn check_with(config: Config, hosts: &[Kind], script: &[Op<'_>], expected: &str) {
     for &kind in hosts {
-        let mut host = Host::new(kind);
+        let mut host = Host::with_config(kind, config);
         host.run(script);
         assert_eq!(host.visible(), expected, "{kind:?}: {script:?}");
     }
@@ -209,6 +213,44 @@ fn a_consonant_after_backspace_starts_a_new_letter() {
         &[Op::Keys("korote"), Op::Backspace(1), Op::Keys("h")],
         "করতহ",
     );
+}
+
+#[test]
+fn a_reph_typed_with_rr_and_its_backspace_look_the_same_everywhere() {
+    // rr-reph design D2 and D5: the armed hasant shows at once, and Backspace
+    // removes only it.
+    check(&ALL_HOSTS, &[Op::Keys("korrta")], "কর্তা");
+    check(&ALL_HOSTS, &[Op::Keys("korr"), Op::Backspace(1)], "কর");
+    check(
+        &ALL_HOSTS,
+        &[Op::Keys("korr"), Op::Backspace(1), Op::Keys("ta")],
+        "করতা",
+    );
+    // Like দ্ম → দ, a consonant goes with the hasant joining it.
+    check(&ALL_HOSTS, &[Op::Keys("korrta"), Op::Backspace(2)], "কর");
+    check(&ALL_HOSTS, &[Op::Keys("pory"), Op::Backspace(1)], "পর");
+}
+
+#[test]
+fn autocorrect_looks_the_same_everywhere() {
+    // autocorrect design D4 and D5: the correction is pending text, so no
+    // host is asked to change committed text.
+    let config = Config {
+        autocorrect: true,
+        ..Config::default()
+    };
+    let check =
+        |script: &[Op<'_>], expected: &str| check_with(config, &ALL_HOSTS, script, expected);
+    check(&[Op::Keys("amra ekTa ")], "আমরা একটা ");
+    check(&[Op::Keys("amra "), Op::Backspace(1)], "আম্রা");
+    check(
+        &[Op::Keys("amra "), Op::Backspace(1), Op::Keys(" ")],
+        "আম্রা ",
+    );
+    check(&[Op::Keys("amra "), Op::Backspace(2)], "আম্র");
+    check(&[Op::Keys("amra."), Op::Keys("ami")], "আমরা।আমি");
+    check(&[Op::Keys("ekTa "), Op::MoveTo(0), Op::Keys("o")], "অএকটা ");
+    check(&[Op::Keys("amra"), Op::MoveTo(0)], "আম্রা");
 }
 
 #[test]
@@ -294,15 +336,26 @@ struct RandomStep {
     bs: Option<u8>,
 }
 
-/// Property: over the seeded random key and Backspace sequences, the hosts
-/// that expose their text show the same text after every step.
+/// Property: over the seeded random key and Backspace sequences, with
+/// Autocorrect off and on, the hosts that expose their text show the same
+/// text after every step.
 #[test]
 fn every_host_shows_the_same_text_over_random_sequences() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/engine/random.json");
     let file: RandomFile = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
     let mut steps_checked = 0;
-    for case in &file.cases {
-        let mut hosts: Vec<Host> = ALL_HOSTS.iter().map(|&kind| Host::new(kind)).collect();
+    let autocorrect = Config {
+        autocorrect: true,
+        ..Config::default()
+    };
+    for (config, case) in [Config::default(), autocorrect]
+        .into_iter()
+        .flat_map(|config| file.cases.iter().map(move |case| (config, case)))
+    {
+        let mut hosts: Vec<Host> = ALL_HOSTS
+            .iter()
+            .map(|&kind| Host::with_config(kind, config))
+            .collect();
         for (index, step) in case.steps.iter().enumerate() {
             for host in &mut hosts {
                 if let Some(key) = &step.k {
@@ -315,7 +368,7 @@ fn every_host_shows_the_same_text_over_random_sequences() {
             let shown: Vec<String> = hosts.iter().map(Host::visible).collect();
             assert!(
                 shown[..TEXT_HOSTS.len()].iter().all(|s| s == &shown[0]),
-                "{:?} step {index}: hosts differ: {shown:?}",
+                "{:?} step {index} ({config:?}): hosts differ: {shown:?}",
                 case.name
             );
         }

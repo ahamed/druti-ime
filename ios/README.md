@@ -46,7 +46,7 @@ The phonetic rules are the same as on the Mac. See the [main README](../README.m
 | return | Commits the word, then types a line break. |
 | ⌫ Delete | In the word you're typing, deletes one letter (`দ্ম` becomes `দ`, `করতে` becomes `করত`). In text that is already final, one character. Hold it to repeat. |
 | 123, #+= | Digits and punctuation: `^` for chandrabindu, `:` for bisarga, `.` for `।`. Space takes you back to the letters. |
-| ⚙ | The options: Bengali digits, দাঁড়ি (।) for full stop, and smart quotes, all on by default. They are remembered. |
+| ⚙ | The options: Bengali digits, দাঁড়ি (।) for full stop, smart quotes, on by default, and [Autocorrect](../README.md#autocorrect), off by default. They are remembered. |
 | 🌐 | The next keyboard (only shown when iOS asks for it). |
 
 Tapping somewhere else in the text keeps the word you were typing as it is. In apps that let

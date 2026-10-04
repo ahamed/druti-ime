@@ -165,9 +165,24 @@ struct KeyboardSessionTests {
     @Test func configChangesApplyFromTheNextKey() {
         let document = FakeDocument()
         let session = type("1", into: document)
-        session.config = Config(bengaliDigits: false, dariForPeriod: true, smartQuotes: true)
+        session.config = Config(
+            bengaliDigits: false, dariForPeriod: true, smartQuotes: true, autocorrect: false)
         _ = type("1 ", into: document, session: session)
         #expect(document.text == "১1 ")
+    }
+
+    // Autocorrect spec: the corrected word and the space stay marked for one
+    // key, so Backspace can undo the correction.
+    @Test func autocorrectShowsTheCorrectionAndBackspaceUndoesIt() {
+        var config = defaultConfig()
+        config.autocorrect = true
+        let document = FakeDocument()
+        let session = type("amra ", into: document, session: KeyboardSession(config: config))
+        #expect(document.marked == "আমরা ")
+        session.backspace(in: document)
+        #expect(document.marked == "আম্রা")
+        _ = type(" ", into: document, session: session)
+        #expect(document.text == "আম্রা ")
     }
 }
 

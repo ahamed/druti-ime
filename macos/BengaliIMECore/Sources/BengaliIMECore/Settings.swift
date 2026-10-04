@@ -1,7 +1,8 @@
 import Foundation
 
-/// The output toggles (Bengali digits, দাঁড়ি, smart quotes), stored in the
-/// process's own UserDefaults so they survive restarts. All on by default.
+/// The toggles (Bengali digits, দাঁড়ি, smart quotes, Autocorrect), stored in
+/// the process's own UserDefaults so they survive restarts and upgrades. The
+/// output options are on by default, Autocorrect is off.
 ///
 /// The macOS input menu and the iOS keyboard's options panel both use this
 /// (apple-silicon-and-ios-keyboard design D5). Each stores its toggles in its
@@ -19,13 +20,19 @@ public enum Settings {
         case dariForPeriod
         /// `"` and `'` type typographic quotes.
         case smartQuotes
+        /// A finished word is corrected from the Autocorrect list.
+        case autocorrect
+
+        /// The value until the toggle is first used. Autocorrect is off, also
+        /// after an upgrade from a version without it (autocorrect design D6).
+        public var defaultValue: Bool { self != .autocorrect }
     }
 
     private static var defaults: UserDefaults { .standard }
 
     /// Whether `option` is on.
     public static func isOn(_ option: Option) -> Bool {
-        defaults.object(forKey: option.rawValue) as? Bool ?? true
+        defaults.object(forKey: option.rawValue) as? Bool ?? option.defaultValue
     }
 
     /// Turns `option` on or off.
@@ -43,6 +50,7 @@ public enum Settings {
         Config(
             bengaliDigits: isOn(.bengaliDigits),
             dariForPeriod: isOn(.dariForPeriod),
-            smartQuotes: isOn(.smartQuotes))
+            smartQuotes: isOn(.smartQuotes),
+            autocorrect: isOn(.autocorrect))
     }
 }

@@ -19,7 +19,7 @@ has decided to support Apple silicon only, on the Mac and on iOS.
   with the same Rust `Composer` as the Mac: each key shows its Bengali right away, the word being
   typed is marked text, Backspace removes one letter of it, and committed text is never changed.
   It has QWERTY letter, number and symbol layers, Shift and Caps Lock, a globe key when iOS asks
-  for one, and an options panel with the same three toggles as the Mac input menu. It doesn't ask
+  for one, and an options panel with the same four toggles as the Mac input menu. It doesn't ask
   for Full Access.
 - The iOS session logic (`KeyboardSession`, behind a small `TextDocument` protocol) and the layout
   rules (`KeyboardState`) go into the shared `BengaliIMECore` package, so they are unit tested on

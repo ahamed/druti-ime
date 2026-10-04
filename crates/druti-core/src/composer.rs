@@ -12,7 +12,13 @@
 //! After every key the composer splits the result into text to commit, which
 //! is final in the document, and pending text: the word being typed, or a lone
 //! `-` / `।` that the next key may rewrite (`--` → `—`, `।.` → `..`).
+//!
+//! With [`Config::autocorrect`] on, a word found in the Autocorrect list is
+//! corrected when it ends, while it is still pending, and stays pending with
+//! the key that ended it until the next key, so Backspace can undo it
+//! (autocorrect design D4 and D5). Committed text is still never changed.
 
+use crate::autocorrect;
 use crate::data::{DARI, DASH, ENTER_KEY};
 use crate::engine::{Action, Config, Engine, is_vowel, utf16};
 use crate::letters::{last_letter_len_utf16, trailing_word_len_utf16};
@@ -41,6 +47,21 @@ pub struct Composer {
     /// The pending (marked) text currently shown by the host, in UTF-16. It is
     /// always the end of the engine's output.
     pending: Vec<u16>,
+    /// The correction made by the last key, while its word is still pending:
+    /// the next Backspace undoes it (autocorrect design D5).
+    correction: Option<Correction>,
+    /// The pending word is one a Backspace un-corrected: it is not corrected
+    /// again when it ends (autocorrect spec, "Backspace undoes a correction").
+    kept: bool,
+}
+
+/// What undoing a correction restores.
+#[derive(Debug, Clone)]
+struct Correction {
+    /// The engine as it was before the key that ended the word.
+    engine: Engine,
+    /// The word as the engine wrote it, before the correction.
+    word: Vec<u16>,
 }
 
 impl Default for Composer {
@@ -55,6 +76,8 @@ impl Composer {
         Self {
             engine: Engine::with_config(config),
             pending: Vec::new(),
+            correction: None,
+            kept: false,
         }
     }
 
@@ -84,8 +107,19 @@ impl Composer {
     /// D2).
     ///
     /// Return/Enter is not a Bangla key: `"Enter"` flushes and is not handled.
+    ///
+    /// With [`Config::autocorrect`], a key that ends a word in the Autocorrect
+    /// list leaves the corrected word and the key's text pending, for the next
+    /// key to commit or Backspace to undo. Enter commits the corrected word at
+    /// once.
     pub fn key(&mut self, key: &str, text_before_caret: Option<&str>) -> Update {
+        // Any key but Backspace settles the last correction; a word break or
+        // the next letter then commits it as usual.
+        let corrected = self.correction.take().is_some();
         if key == ENTER_KEY {
+            if !corrected {
+                self.correct_pending_word();
+            }
             return Update {
                 handled: false,
                 ..self.flush()
@@ -103,6 +137,14 @@ impl Composer {
         let mut actions = self.engine.process(key, context.as_deref());
         if actions.is_empty() {
             // Not a key the engine knows (e.g. a multi-character key name).
+            // The application acts on it at once, so a correction can no
+            // longer be undone: commit it first (autocorrect design D4).
+            if corrected {
+                return Update {
+                    handled: false,
+                    ..self.flush()
+                };
+            }
             return Update {
                 handled: false,
                 pending: self.pending(),
@@ -110,10 +152,85 @@ impl Composer {
             };
         }
         if self.reaches_committed_text(&actions) {
-            self.engine = before;
+            self.engine = before.clone();
             actions = self.engine.process(key, Some(&self.pending()));
         }
-        self.apply_actions(key, &actions)
+        let word = self.pending.clone();
+        let update = self.apply_actions(key, &actions);
+        self.correct_ended_word(word, &update.commit, before)
+            .unwrap_or(update)
+    }
+
+    /// When the last key committed (`commit`) the pending word `word` and the
+    /// list has it, puts the corrected word back in the pending text, before
+    /// the key's own text, and remembers how to undo it (autocorrect design
+    /// D4). `before` is the engine before that key.
+    fn correct_ended_word(
+        &mut self,
+        word: Vec<u16>,
+        commit: &str,
+        before: Engine,
+    ) -> Option<Update> {
+        let is_word = !word.is_empty() && trailing_word_len_utf16(&word) == word.len();
+        if !self.config().autocorrect || !is_word {
+            return None;
+        }
+        // The pending text is a word or a held `-` / `।`, so the word is
+        // committed exactly when a key ended it.
+        let committed = utf16(commit);
+        let rest = committed.strip_prefix(word.as_slice())?;
+        if std::mem::take(&mut self.kept) {
+            return None;
+        }
+        let corrected = utf16(autocorrect::lookup(&String::from_utf16_lossy(&word))?);
+
+        // Keep "committed + pending = engine output" true of the corrected text,
+        // so later keys and `matches_text_before_caret` see what the host shows.
+        let tail = word.len() + rest.len() + self.pending.len();
+        let start = self.engine.output.len().checked_sub(tail)?;
+        let in_step = self.engine.output[start..].starts_with(&word);
+        debug_assert!(in_step, "the engine output ends with the ended word");
+        if !in_step {
+            return None;
+        }
+        self.engine
+            .output
+            .splice(start..start + word.len(), corrected.iter().copied());
+
+        let mut pending = corrected;
+        pending.extend_from_slice(rest);
+        pending.append(&mut self.pending);
+        self.pending = pending;
+        self.correction = Some(Correction {
+            engine: before,
+            word,
+        });
+        Some(Update {
+            commit: String::new(),
+            pending: self.pending(),
+            handled: true,
+        })
+    }
+
+    /// Corrects the pending word in place, before Enter commits it.
+    fn correct_pending_word(&mut self) {
+        let is_word = !self.pending.is_empty()
+            && trailing_word_len_utf16(&self.pending) == self.pending.len();
+        if !self.config().autocorrect || !is_word || self.kept {
+            return;
+        }
+        let Some(corrected) = autocorrect::lookup(&self.pending()) else {
+            return;
+        };
+        let Some(start) = self.engine.output.len().checked_sub(self.pending.len()) else {
+            debug_assert!(false, "the pending text is the end of the engine output");
+            return;
+        };
+        let corrected = utf16(corrected);
+        self.engine
+            .output
+            .splice(start.., corrected.iter().copied());
+        self.pending = corrected;
     }
 
     /// Whether the document can change the result of `key`: vowels (a kar or
@@ -195,7 +312,24 @@ impl Composer {
     ///
     /// With nothing pending the key is not handled: the application deletes
     /// committed text by its own rules, and the composer resets.
+    ///
+    /// Directly after an Autocorrect correction, Backspace undoes it instead:
+    /// the word as typed comes back as the pending text, without the key that
+    /// ended it, and is not corrected again (autocorrect design D5).
     pub fn backspace(&mut self) -> Update {
+        if let Some(Correction { engine, word }) = self.correction.take() {
+            self.engine = engine;
+            // As after any Backspace, the next consonant starts a new letter
+            // (whole-word-pending design D3).
+            self.engine.end_cluster();
+            self.pending = word;
+            self.kept = true;
+            return Update {
+                commit: String::new(),
+                pending: self.pending(),
+                handled: true,
+            };
+        }
         if self.pending.is_empty() {
             self.reset(None);
             return Update {
@@ -210,6 +344,9 @@ impl Composer {
         );
         self.engine.pop(count);
         self.pending.truncate(self.pending.len() - count);
+        if self.pending.is_empty() {
+            self.kept = false;
+        }
         Update {
             commit: String::new(),
             pending: self.pending(),
@@ -221,6 +358,8 @@ impl Composer {
     /// shortcuts, switching input source).
     pub fn flush(&mut self) -> Update {
         self.engine.end_cluster();
+        self.correction = None;
+        self.kept = false;
         let commit = self.pending();
         self.pending.clear();
         Update {
@@ -242,6 +381,8 @@ impl Composer {
             self.engine.set_output(text);
         }
         self.pending.clear();
+        self.correction = None;
+        self.kept = false;
         Update {
             handled: true,
             ..Update::default()

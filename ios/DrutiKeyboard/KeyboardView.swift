@@ -316,8 +316,8 @@ private final class KeyButton: UIButton {
     }
 }
 
-/// The output toggles, shown in place of the keys (design D5). They are the
-/// same three as in the macOS input menu.
+/// The toggles, shown in place of the keys (design D5). They are the same four
+/// as in the macOS input menu.
 private final class OptionsView: UIView {
     var onChange: ((Settings.Option, Bool) -> Void)?
     var onDone: (() -> Void)?
@@ -377,6 +377,8 @@ private final class OptionsView: UIView {
             "\u{09A6}\u{09BE}\u{0981}\u{09DC}\u{09BF} (\u{0964}) for Full Stop"
         case .smartQuotes:
             "Smart Quotes (\u{201C} \u{201D})"
+        case .autocorrect:
+            "Autocorrect"
         }
     }
 

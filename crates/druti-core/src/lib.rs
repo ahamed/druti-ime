@@ -5,6 +5,7 @@
 //! `druti-ffi`, and the web playground through `druti-wasm`. Its behaviour is
 //! pinned by the golden fixtures in `tests/fixtures/`.
 
+mod autocorrect;
 mod composer;
 pub mod data;
 mod engine;

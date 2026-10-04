@@ -19,3 +19,6 @@ examples/playground/wasm
 # iOS app build products (make -C ios ...)
 /ios/build
 /ios/Druti.xcodeproj
+
+# Python bytecode (scripts/autocorrect)
+__pycache__/

@@ -4,7 +4,8 @@ description = "Druti's phonetic roman-to-Bengali engine and marked-text composer
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-license.workspace = true
+# The code is MIT; data/autocorrect.tsv is CC BY-SA 4.0 (autocorrect design D7, data/LICENSE-DATA).
+license = "MIT AND CC-BY-SA-4.0"
 repository.workspace = true
 [dependencies]
 unicode-general-category.workspace = true

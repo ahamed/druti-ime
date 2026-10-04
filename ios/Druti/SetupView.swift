@@ -44,7 +44,15 @@ struct SetupView: View {
 
                 Section("Options") {
                     Text(
-                        "Tap the gear key on the keyboard to turn Bengali digits, \u{09A6}\u{09BE}\u{0981}\u{09DC}\u{09BF} (\u{0964}) for full stop, and smart quotes on or off."
+                        "Tap the gear key on the keyboard to turn Bengali digits, \u{09A6}\u{09BE}\u{0981}\u{09DC}\u{09BF} (\u{0964}) for full stop, smart quotes and Autocorrect on or off."
+                    )
+                }
+
+                // The word list's CC BY-SA 4.0 licence asks for this attribution
+                // wherever it ships (autocorrect design D7).
+                Section("About") {
+                    Text(
+                        "Druti is free software under the MIT license. The Autocorrect word list is derived from the Dakshina dataset (Google Research, CC BY-SA 4.0) and from FrequencyWords by Hermit Dave (built from OpenSubtitles, CC BY-SA 4.0). It is licensed CC BY-SA 4.0."
                     )
                 }
             }

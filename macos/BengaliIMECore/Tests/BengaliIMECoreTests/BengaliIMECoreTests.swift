@@ -83,8 +83,24 @@ struct ComposerBindingTests {
 
     @Test func configToggles() {
         let composer = Composer(
-            config: Config(bengaliDigits: false, dariForPeriod: true, smartQuotes: true))
+            config: Config(
+                bengaliDigits: false, dariForPeriod: true, smartQuotes: true, autocorrect: false))
         #expect(type("2", into: composer) == "2")
+    }
+
+    // Autocorrect spec: off by default; on, a word is corrected when it ends
+    // and Backspace undoes it.
+    @Test func autocorrectCorrectsAtWordEndAndBackspaceUndoes() {
+        #expect(!defaultConfig().autocorrect)
+        var config = defaultConfig()
+        config.autocorrect = true
+        let composer = Composer(config: config)
+        #expect(type("amra ", into: composer) == "")
+        #expect(composer.pending() == "আমরা ")
+        #expect(composer.backspace().pending == "আম্রা")
+        #expect(
+            transpileRomanDocument(document: "amra", preserveLineBreaks: true, config: config)
+                == "আমরা")
     }
 
     // A consonant starts a new letter after committed text, so it never reads

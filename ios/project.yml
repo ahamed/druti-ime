@@ -1,0 +1,80 @@
+# XcodeGen spec: `xcodegen generate` writes Druti.xcodeproj (not committed).
+# Run `make -C ios project`, which builds the Rust engine first.
+name: Druti
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    # Apple silicon only: arm64 iPhones and iPads, and the arm64 simulator on
+    # Apple Silicon Macs (apple-silicon-and-ios-keyboard design D1).
+    ARCHS: arm64
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    # The iOS app's own version, independent of the macOS app's.
+    MARKETING_VERSION: 1.0.0
+    CURRENT_PROJECT_VERSION: 1
+    # Bundle IDs are unique per Apple account. To install from your own
+    # account, change this (for example to com.yourname) in Xcode under the
+    # project's Build Settings → User-Defined, or pass it to xcodebuild.
+    DRUTI_BUNDLE_ID_PREFIX: com.ahamed
+    # Pick your team in Xcode (Signing & Capabilities) to run on a device; a
+    # free Apple account works (design D6).
+    CODE_SIGN_STYLE: Automatic
+packages:
+  BengaliIMECore:
+    path: ../macos/BengaliIMECore
+targets:
+  Druti:
+    type: application
+    platform: iOS
+    sources:
+      - path: Druti
+    dependencies:
+      # Embedded in Druti.app/PlugIns.
+      - target: DrutiKeyboard
+    settings:
+      base:
+        PRODUCT_NAME: Druti
+        PRODUCT_BUNDLE_IDENTIFIER: $(DRUTI_BUNDLE_ID_PREFIX).Druti
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Druti
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+  DrutiKeyboard:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: DrutiKeyboard
+    dependencies:
+      - package: BengaliIMECore
+    settings:
+      base:
+        PRODUCT_NAME: DrutiKeyboard
+        PRODUCT_BUNDLE_IDENTIFIER: $(DRUTI_BUNDLE_ID_PREFIX).Druti.keyboard
+        # Generated keys merged with the NSExtension dictionary in Info.plist.
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: DrutiKeyboard/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: Druti
+        APPLICATION_EXTENSION_API_ONLY: YES
+schemes:
+  Druti:
+    build:
+      targets:
+        Druti: all
+        DrutiKeyboard: all
+  # Runs the keyboard in an app you choose, with the debugger attached to the
+  # keyboard process.
+  DrutiKeyboard:
+    build:
+      targets:
+        Druti: all
+        DrutiKeyboard: all
+    run:
+      config: Debug
+      askForAppToLaunch: true

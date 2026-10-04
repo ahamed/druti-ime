@@ -29,7 +29,8 @@ your input sources and moves it to the Trash.
 
 REQUIREMENTS
 
-macOS 14 or later, on Apple Silicon or Intel.
+macOS 14 or later, on a Mac with Apple Silicon (M1 or later). Druti doesn't
+run on Intel Macs.
 
 LICENSE
 

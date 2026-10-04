@@ -28,7 +28,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin, x86_64-apple-darwin
+          targets: aarch64-apple-darwin, aarch64-apple-ios, aarch64-apple-ios-sim
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-about@0.9.2
@@ -39,15 +39,10 @@ jobs:
         run: |
           brew install xcodegen
           pip install -r macos/Packaging/requirements.txt
-      - name: Install Rosetta if missing (for the x86_64 tests)
-        run: arch -x86_64 /usr/bin/true 2>/dev/null || softwareupdate --install-rosetta --agree-to-license
-
-      - name: Tests on arm64 and x86_64
+      - name: Tests
         run: |
           cargo test -p druti-core
-          cargo test --target x86_64-apple-darwin -p druti-core
           make -C macos test
-          arch -x86_64 swift test --package-path macos/BengaliIMECore
 
       - name: Build the DMG and the zipped app
         run: make -C macos dmg app-zip CURRENT_PROJECT_VERSION=${{ github.run_number }}

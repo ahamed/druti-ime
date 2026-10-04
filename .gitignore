@@ -15,3 +15,7 @@ examples/playground/wasm
 /macos/BengaliIMECore/.swiftpm
 /macos/BengaliIMECore/BengaliIMEFFI.xcframework
 /macos/BengaliIMECore/Sources/BengaliIMECore/Generated
+
+# iOS app build products (make -C ios ...)
+/ios/build
+/ios/Druti.xcodeproj

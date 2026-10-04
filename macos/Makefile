@@ -3,7 +3,7 @@
 #   make install     build, sign ad hoc, and install with the app's own installer (Druti --install)
 #   make uninstall   disable and remove it (Druti --uninstall)
 #   make test        Swift tests for the bindings and helpers
-#   make lint        check Swift formatting and style (swift-format, config in .swift-format)
+#   make lint        check Swift formatting and style (swift-format, config in ../.swift-format)
 #   make format      rewrite the Swift sources with swift-format
 #   make app         build and sign into build/ without installing (used by CI)
 #   make version     print the app's version (MARKETING_VERSION in project.yml)
@@ -12,7 +12,8 @@
 #   make app-zip     zip the built app into build/ (run after make dmg; used by the release)
 #   make clean
 #
-# Needs Xcode, rustup (aarch64-apple-darwin, x86_64-apple-darwin) and XcodeGen; see README.md.
+# Needs Xcode, rustup (aarch64-apple-darwin, aarch64-apple-ios, aarch64-apple-ios-sim) and
+# XcodeGen; see README.md. The engine's XCFramework is shared with the iOS keyboard in ../ios.
 
 APP_NAME    := Druti
 DERIVED     := build/DerivedData
@@ -37,7 +38,7 @@ SWIFT_SOURCES := Druti Tools BengaliIMECore/Package.swift BengaliIMECore/Tests \
 
 all: app
 
-# Rust engine → BengaliIMECore/BengaliIMEFFI.xcframework + Swift bindings.
+# Rust engine → BengaliIMECore/BengaliIMEFFI.xcframework (macOS and iOS) + Swift bindings.
 core:
 	../scripts/build-xcframework.sh
 

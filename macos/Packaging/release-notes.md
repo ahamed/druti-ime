@@ -15,9 +15,8 @@ there. It's the same app as in the DMG and installs the same way.
 Already have Druti? Opening the new DMG's Druti replaces it and keeps your settings.
 To uninstall, choose **Uninstall Druti…** from Druti's input menu.
 
-Requires macOS 14 or later. The app is Universal, but **Intel Macs haven't been tested on real
-hardware yet**. If you use an Intel Mac, please report whether it works in
-[Issues](https://github.com/ahamed/druti-ime/issues).
+Requires macOS 14 or later on a Mac with **Apple Silicon** (M1 or later). Druti doesn't run on
+Intel Macs.
 
 Want to try it first? The [playground](https://ahamed.github.io/druti-ime/) runs the same engine
 in your browser.

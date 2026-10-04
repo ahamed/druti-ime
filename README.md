@@ -47,8 +47,40 @@ Bangla:
 - **`.`** is `।`, except right after a digit (`1.5` → `১.৫`) or another dot; `...` → `...`.
 - **`^`** (chandrabindu) may be typed before or after the vowel: `k^a` and `ka^` both give `কাঁ`.
 
+Consonants typed together join with a hasant (`prothom` → `প্রথম`), with two exceptions you can hear,
+and `o` always keeps them apart (`korote` → `করতে`):
+
+- **A single `r` never joins the next consonant:** `korte` → `করতে`, `dorkar` → `দরকার`. Type
+  **`rr` for reph**: the second `r` shows the hasant at once (`korr` → `কর্`), and the next
+  consonant completes it (`korrta` → `কর্তা`). A vowel after `rr` cancels the reph (`korra` →
+  `করা`), except `i`, which makes ঋ (`rriN` → `ঋণ`, `krriShi` → `কৃষি`).
+- **Nothing joins after a breathy letter** (খ ঘ ছ ঝ ঠ ঢ থ ধ ফ ভ), হ, ড়, ঢ় or য়: `dekhte` → `দেখতে`,
+  `jayga` → `জায়গা`. The ফলা keys `r`, `l`, `m`, `n`, `N`, `w` and `y` still join (`cihno` →
+  `চিহ্ন`, `dhwoni` → `ধ্বনি`); `b` doesn't (`dekhbe` → `দেখবে`).
+- **`y`** after a consonant is য-ফলা. After a single `r` it stays visible as `র‍্য` (`poryonto` →
+  `পর‍্যন্ত`); reph over য is typed `rry` (`porryonto` → `পর্যন্ত`). **`z`** is the letter য
+  (`porzonto` → `পরযন্ত`).
+
 Three options can be turned off in the Mac input menu and in the playground: Bengali digits,
-দাঁড়ি for `.`, and smart quotes.
+দাঁড়ি for `.`, and smart quotes. A fourth, Autocorrect, is off until you turn it on.
+
+### Autocorrect
+
+Many words have a vowel that is written but not said: আমরা is said "amra", একটা "ekTa". Typed
+that way, the engine joins the consonants (`amra` → `আম্রা`), and you type the `o` to keep them
+apart (`amora` → `আমরা`). With **Autocorrect** on, you can leave it out in common words:
+
+- When a word ends (a space, punctuation, a digit or Enter), Druti looks it up in a fixed list of
+  about 1,300 common words and, if it's there, removes the extra hasant: `amra` + space → `আমরা `,
+  `amra ekTa jinis dekhte cai` → `আমরা একটা জিনিস দেখতে চাই`.
+- It only ever removes a hasant, so the result is exactly what typing the `o` gives. It never adds a
+  conjunct or a reph, and it leaves real words alone: `aste` stays `আস্তে`.
+- **Backspace** right after the correction undoes it (`আম্রা` again), and that word is left as you
+  typed it. Enter commits the corrected word at once.
+- The engine itself doesn't change: with Autocorrect off, or for any word not in the list, the same
+  keys give the same text as always. The list changes only with a new version of Druti.
+
+Convert selection and the playground's converter apply it too when it's on.
 
 ## Repository
 
@@ -87,4 +119,8 @@ To change how something types, change `druti-core` and update the affected entri
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE), except the Autocorrect word list.
+
+The Autocorrect word list is derived from the Dakshina dataset (Google Research, CC BY-SA 4.0) and
+from FrequencyWords by Hermit Dave (built from OpenSubtitles, CC BY-SA 4.0). It is licensed
+[CC BY-SA 4.0](crates/druti-core/data/LICENSE-DATA). The rest of Druti is MIT.

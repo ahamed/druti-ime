@@ -357,6 +357,36 @@ pub const ASPIRATED_CONSONANT_BY_BASE: &[(&str, &str)] = &[
     (NYO_CHO, NYO_CHHO),
 ];
 
+/// Letters that no consonant joins after, except a ফলা (rr-reph design D4b):
+/// the breathy letters, হ, ড়, ঢ় and য়. A breathy sound can't close a cluster,
+/// so `dekhte` gives দেখতে, not দেখ্তে.
+pub const NO_JOIN_AFTER: &[&str] = &[
+    KONTHYO_KHO,
+    KONTHYO_GHO,
+    TALOBBO_CHHO,
+    BORGIYO_JHO,
+    MURDHONNO_THO,
+    MURDHONNO_DHO,
+    DONTO_THO,
+    DONTO_DHO,
+    OSHTHO_PHO,
+    OSHTHO_BHO,
+    USHMO_HO,
+    D_E_SHUNNO_RO,
+    DH_E_SHUNNO_RO,
+    ONTOSTHO_YO,
+];
+
+/// ফলা letters that still join after [`NO_JOIN_AFTER`] (rr-reph design D4b):
+/// চিহ্ন, ব্রাহ্মণ, ভ্রমণ, ফ্লাইট. ব joins only when typed with `w` (ধ্বনি, but
+/// দেখবে), and `y` makes য-ফলা by its own rule.
+pub const PHOLA_AFTER_NO_JOIN: &[&str] =
+    &[ONTOSTHO_RO, ONTOSTHO_LO, OSHTHO_MO, DONTO_NO, MURDHONNO_NO];
+
+/// Zero-width joiner. Between র and য-ফলা (র + ZWJ + ্য) it keeps the ফলা
+/// visible rather than letting fonts draw reph (rr-reph design D4).
+pub const ZWJ: &str = "\u{200D}";
+
 /// `Map.get` over one of the pair tables above.
 pub fn lookup<V: Copy>(table: &[(&str, V)], key: &str) -> Option<V> {
     table.iter().find(|(k, _)| *k == key).map(|(_, v)| *v)

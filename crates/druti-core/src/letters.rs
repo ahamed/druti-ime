@@ -11,7 +11,7 @@ use std::ops::RangeInclusive;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::data::{HASANT, NUKTA, is_bengali_consonant_letter, is_kar_taking_consonant};
+use crate::data::{HASANT, NUKTA, ZWJ, is_bengali_consonant_letter, is_kar_taking_consonant};
 
 /// The Bengali Unicode block. Text outside it is deleted by grapheme cluster.
 const BENGALI: RangeInclusive<char> = '\u{0980}'..='\u{09FF}';
@@ -59,11 +59,18 @@ fn consonant_start(units: &[u16], predicate: fn(&str) -> bool) -> Option<usize> 
 }
 
 /// When `before` ends in a hasant joined to a consonant that can carry it,
-/// the start of that hasant and of that consonant.
+/// the start of that hasant and of that consonant. A ZWJ between the
+/// consonant and the hasant (র + ZWJ + ্য, rr-reph design D4) belongs to the
+/// hasant, so the joined letter takes it along.
 fn joined_hasant(before: &[u16]) -> Option<(usize, usize)> {
-    let (hasant, ch) = last_char(before)?;
+    let (mut hasant, ch) = last_char(before)?;
     if !is(ch, HASANT) {
         return None;
+    }
+    if let Some((zwj, ch)) = last_char(&before[..hasant])
+        && is(ch, ZWJ)
+    {
+        hasant = zwj;
     }
     let consonant = consonant_start(&before[..hasant], is_kar_taking_consonant)?;
     Some((hasant, consonant))
@@ -122,7 +129,7 @@ pub(crate) fn trailing_consonant_run_len_utf16(units: &[u16]) -> usize {
 
 /// Whether `ch` belongs to a Bengali word: a letter, a sign, a kar, the hasant
 /// or nukta, or a joiner. Digits, currency signs and punctuation end a word.
-fn is_word_char(ch: char) -> bool {
+pub(crate) fn is_word_char(ch: char) -> bool {
     ('\u{0980}'..='\u{09E3}').contains(&ch)
         || matches!(ch, '\u{09F0}' | '\u{09F1}' | '\u{200C}' | '\u{200D}')
 }
@@ -192,6 +199,13 @@ mod tests {
     #[test]
     fn lone_surrogate_is_one_unit() {
         assert_eq!(last_letter_len_utf16(&[0x0995, 0xD83D]), 1);
+    }
+
+    #[test]
+    fn visible_ja_phala_goes_with_its_zwj() {
+        // র + ZWJ + ্য (rr-reph design D4): one letter, and part of the run.
+        assert_eq!(letter("প\u{09B0}\u{200D}\u{09CD}\u{09AF}"), 3);
+        assert_eq!(run("প\u{09B0}\u{200D}\u{09CD}\u{09AF}"), 4);
     }
 
     #[test]

@@ -20,11 +20,13 @@ const main = async () => {
   const digits = byId<HTMLInputElement>('opt-digits');
   const dari = byId<HTMLInputElement>('opt-dari');
   const quotes = byId<HTMLInputElement>('opt-quotes');
+  const autocorrect = byId<HTMLInputElement>('opt-autocorrect');
   const readConfig = (): Config => {
     const config = new Config();
     config.bengaliDigits = digits.checked;
     config.dariForPeriod = dari.checked;
     config.smartQuotes = quotes.checked;
+    config.autocorrect = autocorrect.checked;
     return config;
   };
 
@@ -57,7 +59,7 @@ const main = async () => {
   convert();
 
   // Settings apply to the next key and to the bulk conversion.
-  for (const input of [digits, dari, quotes]) {
+  for (const input of [digits, dari, quotes, autocorrect]) {
     input.addEventListener('change', () => {
       const previous = config;
       config = readConfig();

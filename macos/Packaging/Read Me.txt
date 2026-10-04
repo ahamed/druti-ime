@@ -35,3 +35,8 @@ LICENSE
 
 Druti is free software under the MIT license. Licenses.txt lists it and the
 licenses of the open source components Druti includes.
+
+The Autocorrect word list is derived from the Dakshina dataset (Google
+Research, CC BY-SA 4.0) and from FrequencyWords by Hermit Dave (built from
+OpenSubtitles, CC BY-SA 4.0). It is licensed CC BY-SA 4.0. The rest of Druti
+is MIT.

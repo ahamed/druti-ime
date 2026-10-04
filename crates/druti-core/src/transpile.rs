@@ -1,5 +1,6 @@
 //! Whole-document conversion: every character is typed as a keystroke.
 
+use crate::autocorrect;
 use crate::data::ENTER_KEY;
 use crate::engine::{Action, Config, Engine};
 
@@ -11,7 +12,10 @@ pub fn transpile_roman_document(document: &str, preserve_line_breaks: bool) -> S
 }
 
 /// [`transpile_roman_document`] with output toggles (the macOS "Convert
-/// selection" command applies the current input menu settings).
+/// selection" command applies the current input menu settings). With
+/// [`Config::autocorrect`], every word of the result found in the Autocorrect
+/// list is corrected, the last one included (autocorrect spec, "Autocorrect
+/// in bulk conversion").
 pub fn transpile_roman_document_with_config(
     document: &str,
     preserve_line_breaks: bool,
@@ -40,5 +44,10 @@ pub fn transpile_roman_document_with_config(
     for (offset, position) in break_positions.into_iter().enumerate() {
         result.insert(position + offset, u16::from(b'\n'));
     }
-    String::from_utf16_lossy(&result)
+    let result = String::from_utf16_lossy(&result);
+    if config.autocorrect {
+        autocorrect::correct_words(&result)
+    } else {
+        result
+    }
 }

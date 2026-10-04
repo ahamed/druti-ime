@@ -205,6 +205,7 @@ final class InputController: IMKInputController {
             #selector(toggleDari(_:)))
         addToggle(
             "Smart Quotes (\u{201C} \u{201D})", .smartQuotes, #selector(toggleSmartQuotes(_:)))
+        addToggle("Autocorrect", .autocorrect, #selector(toggleAutocorrect(_:)))
 
         menu.addItem(.separator())
         menu.addItem(
@@ -224,6 +225,7 @@ final class InputController: IMKInputController {
     @objc private func toggleBengaliDigits(_ sender: Any?) { toggle(.bengaliDigits) }
     @objc private func toggleDari(_ sender: Any?) { toggle(.dariForPeriod) }
     @objc private func toggleSmartQuotes(_ sender: Any?) { toggle(.smartQuotes) }
+    @objc private func toggleAutocorrect(_ sender: Any?) { toggle(.autocorrect) }
 
     private func toggle(_ option: Settings.Option) {
         Settings.toggle(option)

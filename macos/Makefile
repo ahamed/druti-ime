@@ -45,18 +45,22 @@ $(ICON): Tools/make-icon.swift
 	@mkdir -p $(dir $(ICON))
 	swift Tools/make-icon.swift $(ICON)
 
-# Druti's MIT license, then the notices of every Rust crate compiled into it.
-# Without cargo-about (everyday builds), only Druti's license; `make dmg`
+# Druti's MIT license and the Autocorrect list's CC BY-SA license (autocorrect
+# design D7), then the notices of every Rust crate compiled into it. Without
+# cargo-about (everyday builds), only Druti's own licenses; `make dmg`
 # regenerates the full file and fails without cargo-about.
-$(LICENSES): ../LICENSE Packaging/about.toml Packaging/about.hbs ../Cargo.lock
+DATA_LICENSE := ../crates/druti-core/data/LICENSE-DATA
+$(LICENSES): ../LICENSE $(DATA_LICENSE) Packaging/about.toml Packaging/about.hbs ../Cargo.lock
 	@mkdir -p $(dir $(LICENSES))
 	@if command -v cargo-about >/dev/null 2>&1; then \
-		{ echo "Druti"; echo; cat ../LICENSE; echo; echo "Third-party components"; echo; \
+		{ echo "Druti"; echo; cat ../LICENSE; echo; echo "Autocorrect word list"; echo; \
+		  cat $(DATA_LICENSE); echo; echo "Third-party components"; echo; \
 		  cargo about generate --fail -c Packaging/about.toml -m ../crates/druti-ffi/Cargo.toml Packaging/about.hbs; \
 		} > $@.tmp && mv $@.tmp $@; \
 	else \
-		echo "warning: cargo-about not found; $@ lists only Druti's own license"; \
-		{ echo "Druti"; echo; cat ../LICENSE; echo; echo "Third-party notices are included in release builds."; } > $@; \
+		echo "warning: cargo-about not found; $@ lists only Druti's own licenses"; \
+		{ echo "Druti"; echo; cat ../LICENSE; echo; echo "Autocorrect word list"; echo; \
+		  cat $(DATA_LICENSE); echo; echo "Third-party notices are included in release builds."; } > $@; \
 	fi
 
 licenses: $(LICENSES)

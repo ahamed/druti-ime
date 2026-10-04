@@ -12,6 +12,10 @@ uniffi::setup_scaffolding!();
 
 /// Output options; see `druti_core::Config`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Record)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "independent on/off settings, one per menu item"
+)]
 pub struct Config {
     /// `1` → `১`. Off: digits stay ASCII.
     pub bengali_digits: bool,
@@ -19,6 +23,9 @@ pub struct Config {
     pub dari_for_period: bool,
     /// `"` and `'` become typographic quotes. Off: they stay ASCII.
     pub smart_quotes: bool,
+    /// Corrects a finished word from the Autocorrect list, which only removes
+    /// hasants (`আম্রা` → `আমরা`). Off by default.
+    pub autocorrect: bool,
 }
 
 impl From<Config> for druti_core::Config {
@@ -27,6 +34,7 @@ impl From<Config> for druti_core::Config {
             bengali_digits: c.bengali_digits,
             dari_for_period: c.dari_for_period,
             smart_quotes: c.smart_quotes,
+            autocorrect: c.autocorrect,
         }
     }
 }
@@ -37,11 +45,12 @@ impl From<druti_core::Config> for Config {
             bengali_digits: c.bengali_digits,
             dari_for_period: c.dari_for_period,
             smart_quotes: c.smart_quotes,
+            autocorrect: c.autocorrect,
         }
     }
 }
 
-/// The defaults: every option on.
+/// The defaults: the output options on, Autocorrect off.
 #[uniffi::export]
 pub fn default_config() -> Config {
     druti_core::Config::default().into()
@@ -262,6 +271,24 @@ mod tests {
         composer.set_config(config);
         assert_eq!(composer.config(), config);
         assert_eq!(composer.key("2".into(), None).commit, "2");
+    }
+
+    #[test]
+    fn autocorrect_matches_the_core_composer() {
+        let config = Config {
+            autocorrect: true,
+            ..default_config()
+        };
+        assert!(!default_config().autocorrect);
+        let ffi = Composer::new(config);
+        let mut core = druti_core::Composer::new(config.into());
+        for key in ["a", "m", "r", "a", " "] {
+            assert_eq!(ffi.key(key.into(), None), core.key(key, None).into());
+        }
+        assert_eq!(ffi.pending(), "আমরা ");
+        assert_eq!(ffi.backspace(), core.backspace().into(), "undo");
+        assert_eq!(ffi.pending(), "আম্রা");
+        assert_eq!(transpile_roman_document("amra".into(), true, config), "আমরা");
     }
 
     #[test]

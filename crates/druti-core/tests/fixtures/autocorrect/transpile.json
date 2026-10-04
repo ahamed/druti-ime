@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "description": "autocorrect spec, \"Autocorrect in bulk conversion\": transpile_roman_document_with_config(input, preserveLineBreaks, { autocorrect }) results. Other settings are the defaults.",
+  "cases": [
+    {"name": "Converting a sentence", "input": "amra ekTa jinis dekhte cai", "autocorrect": true, "output": "আমরা একটা জিনিস দেখতে চাই"},
+    {"name": "Setting off", "input": "amra", "output": "আম্রা"},
+    {"name": "Setting off explicitly", "input": "amra ekTa jinis dekhte cai", "autocorrect": false, "output": "আম্রা এক্টা জিনিস দেখতে চাই"},
+    {"name": "Last word of the document", "input": "amra", "autocorrect": true, "output": "আমরা"},
+    {"name": "Words not in the list", "input": "bhokto Sokti kintu", "autocorrect": true, "output": "ভক্ত শক্তি কিন্তু"},
+    {"name": "Engine output that is a word", "input": "aste", "autocorrect": true, "output": "আস্তে"},
+    {"name": "Punctuation, digits and quotes end words", "input": "apni? amra1 thakte. \"ekTu\" amra-apni", "autocorrect": true, "output": "আপনি? আমরা১ থাকতে। “একটু” আমরা-আপনি"},
+    {"name": "Line breaks", "input": "amra\nekTa", "autocorrect": true, "output": "আমরা\nএকটা"},
+    {"name": "Line breaks typed as plain characters", "input": "amra\nekTa", "preserveLineBreaks": false, "autocorrect": true, "output": "আমরা\nএকটা"},
+    {"name": "Already correct", "input": "amora ekoTa", "autocorrect": true, "output": "আমরা একটা"}
+  ]
+}

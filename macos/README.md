@@ -67,11 +67,14 @@ Click the **দ্রু** icon in the menu bar while Druti is active:
 - **Bengali Digits (১২৩)**: on by default. Turn it off to type `2024` as ASCII digits.
 - **দাঁড়ি (।) for Full Stop**: on by default. Turn it off to type `.` as `.`.
 - **Smart Quotes (“ ”)**: on by default. Turn it off for straight `"` and `'`.
+- **Autocorrect**: off by default. When it's on, a common word typed without its hidden vowel is
+  corrected when the word ends (`amra` + space → আমরা). Backspace right after undoes it. See
+  [Autocorrect](../README.md#autocorrect).
 - **Convert Selection to Bengali**: replaces the selected roman text with Bengali, keeping line
   breaks and using the settings above. In apps that don't expose the selection, it does nothing.
 - **Uninstall Druti…**: asks first, then removes Druti (see [Install](#install)).
 
-The toggles are remembered across restarts.
+The toggles are remembered across restarts and updates.
 
 ## Build from source
 

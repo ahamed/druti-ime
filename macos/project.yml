@@ -15,7 +15,7 @@ settings:
     # The app's version, and its only source: `make version` prints it and the
     # release workflow checks the macos-vX.Y.Z tag against it. CI overrides the
     # build number with the workflow run number.
-    MARKETING_VERSION: 1.1.0
+    MARKETING_VERSION: 2.0.0
     CURRENT_PROJECT_VERSION: 1
 packages:
   BengaliIMECore:

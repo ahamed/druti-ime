@@ -17,6 +17,7 @@ struct ConfigPatch {
     bengali_digits: Option<bool>,
     dari_for_period: Option<bool>,
     smart_quotes: Option<bool>,
+    autocorrect: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -80,6 +81,7 @@ fn run(case: &Case) -> Result<(), String> {
         config.bengali_digits = patch.bengali_digits.unwrap_or(config.bengali_digits);
         config.dari_for_period = patch.dari_for_period.unwrap_or(config.dari_for_period);
         config.smart_quotes = patch.smart_quotes.unwrap_or(config.smart_quotes);
+        config.autocorrect = patch.autocorrect.unwrap_or(config.autocorrect);
     }
     let mut composer = Composer::new(config);
     let mut host = Host {
@@ -178,6 +180,11 @@ fn backspace() {
 #[test]
 fn config() {
     replay("config.json");
+}
+
+#[test]
+fn autocorrect() {
+    replay("autocorrect.json");
 }
 
 #[derive(Deserialize)]

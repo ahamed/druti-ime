@@ -8,9 +8,14 @@
 
 use wasm_bindgen::prelude::*;
 
-/// Output options; see `druti_core::Config`. `new Config()` has every option on.
+/// Output options; see `druti_core::Config`. `new Config()` has the output
+/// options on and Autocorrect off.
 #[wasm_bindgen]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "independent on/off settings, one per menu item"
+)]
 pub struct Config {
     /// `1` → `১`. Off: digits stay ASCII.
     #[wasm_bindgen(js_name = bengaliDigits)]
@@ -21,11 +26,15 @@ pub struct Config {
     /// `"` and `'` become typographic quotes. Off: they stay ASCII.
     #[wasm_bindgen(js_name = smartQuotes)]
     pub smart_quotes: bool,
+    /// Corrects a finished word from the Autocorrect list, which only removes
+    /// hasants (`আম্রা` → `আমরা`). Off by default.
+    #[wasm_bindgen(js_name = autocorrect)]
+    pub autocorrect: bool,
 }
 
 #[wasm_bindgen]
 impl Config {
-    /// The defaults: every option on.
+    /// The defaults: the output options on, Autocorrect off.
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         druti_core::Config::default().into()
@@ -44,6 +53,7 @@ impl From<Config> for druti_core::Config {
             bengali_digits: c.bengali_digits,
             dari_for_period: c.dari_for_period,
             smart_quotes: c.smart_quotes,
+            autocorrect: c.autocorrect,
         }
     }
 }
@@ -54,18 +64,23 @@ impl From<druti_core::Config> for Config {
             bengali_digits: c.bengali_digits,
             dari_for_period: c.dari_for_period,
             smart_quotes: c.smart_quotes,
+            autocorrect: c.autocorrect,
         }
     }
 }
 
 /// What the host applies after a key; see `druti_core::Update`. It never
 /// changes text committed earlier.
-#[wasm_bindgen(getter_with_clone)]
+// `getter_with_clone` only on the `String` fields: on the whole struct it
+// would also clone the `bool`, which clippy's `clone_on_copy` rejects.
+#[wasm_bindgen]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Update {
     /// Text that replaces the pending text and becomes final.
+    #[wasm_bindgen(getter_with_clone)]
     pub commit: String,
     /// The new pending text (empty: none).
+    #[wasm_bindgen(getter_with_clone)]
     pub pending: String,
     /// Whether the key was consumed; if not, the editor also processes it.
     pub handled: bool,
@@ -209,6 +224,7 @@ mod tests {
     fn default_settings() {
         let config = Config::new();
         assert!(config.bengali_digits && config.dari_for_period && config.smart_quotes);
+        assert!(!config.autocorrect);
         assert_eq!(
             druti_core::Config::from(config),
             druti_core::Config::default()
@@ -258,6 +274,21 @@ mod tests {
         config.bengali_digits = false;
         composer.set_config(&config);
         assert_eq!(composer.key("2", None).commit, "2");
+    }
+
+    #[test]
+    fn autocorrect_matches_the_core_composer() {
+        let mut config = Config::new();
+        config.autocorrect = true;
+        let mut wasm = Composer::new(&config);
+        let mut core = druti_core::Composer::new(config.into());
+        for key in ["a", "m", "r", "a", " "] {
+            assert_eq!(wasm.key(key, None), core.key(key, None).into());
+        }
+        assert_eq!(wasm.pending(), "আমরা ");
+        assert_eq!(wasm.backspace(), core.backspace().into(), "undo");
+        assert_eq!(wasm.pending(), "আম্রা");
+        assert_eq!(transpile_roman_document("amra", true, &config), "আমরা");
     }
 
     #[test]
